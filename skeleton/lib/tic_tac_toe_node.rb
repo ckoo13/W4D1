@@ -12,29 +12,37 @@ class TicTacToeNode
 
   def losing_node?(evaluator)
     #base case
-    if evaluator == next_mover_mark #we are checking if the winner is the opponent
-      if board.over? && board.winner == evaluator
-        return true
-      end
+      #evaluator is a mark signifying our turn
+    if board.over?
+      return board.won? && board.winner != evaluator
     end
 
-    if evaluator !- next_mover_mark
-      if board.over? && board.winner.nil?
-        return false
-      end
-    end
-
-    #inductive step (for opponent)
-    if evaluator == next_mover_mark
-      self.children.each do |node|
-        losing_node?(node.next_mover_mark)
-      end
+    #this signifies the players turn
+    if evaluator == self.next_mover_mark
+      self.children.all? { |node| node.losing_node?(evaluator)}
+    else
+    #this signifies the opponents turn
+      evaluator != self.next_mover_mark
+      self.children.any? {|node| node.losing_node?(evaluator)}
     end
 
   end
 
   def winning_node?(evaluator)
-
+    #base case
+      #if the game is over and we have won
+        #evaluator is a mark signalling the mark on our turn
+    if board.over?
+      return board.winner == evaluator
+    end
+    
+    #signifies our turn
+    if evaluator == self.next_mover_mark
+      self.children.any? { |node| node.winning_node?(evaluator)}
+    else
+      #signifies opponents turn
+      self.children.all? { |node| node.winning_node?(evaluator)}
+    end
   end
 
   # This method generates an array of all moves that can be made after
@@ -59,8 +67,11 @@ class TicTacToeNode
         pos = [row,col]
       
         if @board.empty?(pos)
-          child = TicTacToeNode.new(@board.dup, :o, pos)
-          child.board[pos] = @next_mover_mark
+          new_board = @board.dup
+          next_mover_mark = (self.next_mover_mark == :x ? :o : :x)
+          child = TicTacToeNode.new(new_board, next_mover_mark, pos)
+          child.board[pos] = self.next_mover_mark
+          
           children << child
         end
       end
